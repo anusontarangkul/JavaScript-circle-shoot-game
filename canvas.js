@@ -135,12 +135,20 @@ function animate() {
 
         projectiles.forEach((projectile, projectileIndex) => {
             const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y)
-            if (dist - enemy.radius - projectile.radius < 1) {
-                setTimeout(() => {
-                    enemies.splice(index, 1);
-                    projectiles.splice(projectileIndex, 1);
-                }, 0)
 
+            // when projectiles touch enemy
+            if (dist - enemy.radius - projectile.radius < 1) {
+                if (enemy.radius - 10 > 10) {
+                    enemy.radius -= 10;
+                    setTimeout(() => {
+                        projectiles.splice(projectileIndex, 1);
+                    }, 0)
+                } else {
+                    setTimeout(() => {
+                        enemies.splice(index, 1);
+                        projectiles.splice(projectileIndex, 1);
+                    }, 0)
+                }
             }
         })
     })
