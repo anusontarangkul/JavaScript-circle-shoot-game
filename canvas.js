@@ -45,6 +45,29 @@ class Enemy {
     }
 }
 
+class Particle {
+    constructor(x, y, radius, color, velocity) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.color = color;
+        this.velocity = velocity;
+    }
+    draw() {
+        canvas2d.beginPath();
+        canvas2d.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        canvas2d.fillStyle = this.color;
+        canvas2d.fill()
+    }
+
+    update() {
+        this.draw();
+        this.x = this.x + this.velocity.x;
+        this.y = this.y + this.velocity.y;
+    }
+}
+
+
 class Projectile {
     constructor(x, y, radius, color, velocity) {
         this.x = x;
@@ -78,6 +101,7 @@ const projectile = new Projectile(canvas.width / 2, canvas.height / 2, 5, 'red',
 
 const projectiles = [];
 const enemies = [];
+const particles = [];
 
 function spawnEnemies() {
     setInterval(() => {
@@ -113,6 +137,9 @@ function animate() {
     canvas2d.fillStyle = 'rgba(0,0,0,0.1)'
     canvas2d.fillRect(0, 0, canvas.width, canvas.height)
     player.draw();
+    particles.forEach(particle => {
+        particle.update();
+    });
     projectiles.forEach((projectile, index) => {
         projectile.update()
 
@@ -138,6 +165,9 @@ function animate() {
 
             // when projectiles touch enemy
             if (dist - enemy.radius - projectile.radius < 1) {
+                for (let i = 0; i < 8; i++) {
+                    particles.push(new Particle(projectile.x, projectile.y, 3, enemy.color, { x: Math.random() - .5, y: Math.random() - .5 }))
+                }
                 if (enemy.radius - 10 > 5) {
                     gsap.to(enemy, {
                         radius: enemy.radius - 10
