@@ -5,6 +5,9 @@ const canvas2d = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = innerHeight;
 
+const scoreEl = document.querySelector('#scoreEl');
+
+
 class Player {
 
     constructor(x, y, radius, color) {
@@ -45,6 +48,7 @@ class Enemy {
     }
 }
 
+const friction = 0.99;
 class Particle {
     constructor(x, y, radius, color, velocity) {
         this.x = x;
@@ -52,18 +56,25 @@ class Particle {
         this.radius = radius;
         this.color = color;
         this.velocity = velocity;
+        this.alpha = 1;
     }
     draw() {
+        canvas2d.save();
+        canvas2d.globalAlpha = this.alpha;
         canvas2d.beginPath();
         canvas2d.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
         canvas2d.fillStyle = this.color;
         canvas2d.fill()
+        canvas2d.restore();
     }
 
     update() {
         this.draw();
+        this.velocity.x *= friction;
+        this.velocity.y *= friction;
         this.x = this.x + this.velocity.x;
         this.y = this.y + this.velocity.y;
+        this.alpha -= 0.01
     }
 }
 
@@ -130,14 +141,20 @@ function spawnEnemies() {
     )
 
 }
-let animationId
+let animationId;
+let score = 0;
 
 function animate() {
     animationId = requestAnimationFrame(animate);
     canvas2d.fillStyle = 'rgba(0,0,0,0.1)'
     canvas2d.fillRect(0, 0, canvas.width, canvas.height)
     player.draw();
-    particles.forEach(particle => {
+    particles.forEach((particle, index) => {
+        if (particle.alpha <= 0) {
+            particles.splice(index, 1)
+        } else {
+            particle.update();
+        }
         particle.update();
     });
     projectiles.forEach((projectile, index) => {
@@ -165,10 +182,14 @@ function animate() {
 
             // when projectiles touch enemy
             if (dist - enemy.radius - projectile.radius < 1) {
-                for (let i = 0; i < 8; i++) {
-                    particles.push(new Particle(projectile.x, projectile.y, 3, enemy.color, { x: Math.random() - .5, y: Math.random() - .5 }))
+                for (let i = 0; i < enemy.radius * 2; i++) {
+                    particles.push(new Particle(projectile.x, projectile.y, Math.random() * 2, enemy.color, { x: (Math.random() - .5) * (Math.random() * 6), y: (Math.random() - .5) * (Math.random() * 6) }))
                 }
                 if (enemy.radius - 10 > 5) {
+                    // increase score
+                    score += 100;
+                    scoreEl.innerHTML = score;
+
                     gsap.to(enemy, {
                         radius: enemy.radius - 10
                     });
@@ -176,6 +197,10 @@ function animate() {
                         projectiles.splice(projectileIndex, 1);
                     }, 0)
                 } else {
+                    // remove enemy
+                    score += 240;
+                    scoreEl.innerHTML = score;
+
                     setTimeout(() => {
                         enemies.splice(index, 1);
                         projectiles.splice(projectileIndex, 1);
